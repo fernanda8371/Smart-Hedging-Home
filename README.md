@@ -113,27 +113,91 @@ npm install -g pnpm
    http://localhost:3000
    ```
 
-## 🏗️ Estructura del Proyecto
+## 👥 Sistema de Usuarios Empresariales
+
+### Perfil de Negocio Completo
+El sistema incluye un perfil empresarial integral diseñado para proporcionar contexto específico a los análisis de riesgo de divisas:
+
+```typescript
+interface BusinessProfile {
+  companyName: string;
+  industry: string;
+  description: string;
+  annualRevenue: string;
+  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+  hedgingObjectives: string[];
+  operatingCurrencies: string[];
+  baseCurrency: string;
+}
+```
+
+### Páginas de Usuario
+- **`/login`**: Página de acceso con cuentas demo empresariales
+- **`/settings`**: Configuración completa del perfil empresarial
+  - Información de la empresa y industria
+  - Configuración financiera (ingresos, monedas)
+  - Objetivos de cobertura personalizables
+  - Perfil de tolerancia al riesgo
+  - Preferencias de notificaciones
+
+### Integración MCP (Model Context Protocol)
+
+#### Generación de URLs con Contexto Empresarial
+El sistema genera automáticamente URLs con parámetros que proporcionan contexto empresarial a los modelos de IA:
+
+```typescript
+// Ejemplo de URL generada:
+// https://api.smarthedging.com/analysis?company=TechCorp&industry=technology&revenue=10M-50M&risk=moderate&currencies=USD,EUR,MXN&objectives=cashflow,budget
+```
+
+#### Parámetros MCP Incluidos
+- **Contexto empresarial**: Nombre, industria, descripción
+- **Perfil financiero**: Ingresos anuales, moneda base
+- **Configuración de riesgo**: Tolerancia, objetivos de cobertura
+- **Monedas operativas**: Para análisis de impacto personalizado
+- **Timestamp**: Para análisis temporal contextual
+
+#### Beneficios para IA
+- **Análisis personalizado**: Recomendaciones específicas por industria
+- **Cálculos contextuales**: Impacto ajustado al tamaño y perfil de la empresa
+- **Estrategias relevantes**: Sugerencias alineadas con objetivos empresariales
+
+## 🗂️ Arquitectura del Proyecto
+
+### Estructura de Componentes
 
 ```
 Smart Hedging Home/
 ├── 📁 app/                      # App Router de Next.js
 │   ├── layout.tsx              # Layout principal con providers
 │   ├── page.tsx                # Dashboard principal
+│   ├── login/                  # Sistema de autenticación
+│   │   └── page.tsx           # Página de inicio de sesión
+│   ├── settings/               # Configuración empresarial
+│   │   └── page.tsx           # Gestión de perfil de negocio
 │   ├── scenario/               # Página de constructor de escenarios
+│   │   └── page.tsx           # Builder de opciones y estrategias
 │   └── globals.css             # Estilos globales
 ├── 📁 components/              # Componentes reutilizables
+│   ├── header.tsx              # Header con navegación y usuario
 │   ├── analysis-row.tsx        # Componente de fila de análisis
-│   ├── impact-event-card.tsx   # Tarjeta de noticia
+│   ├── impact-event-card.tsx   # Tarjeta de noticia con IA
 │   ├── currency-chart-card.tsx # Gráfico de divisas (legacy)
 │   └── ui/                     # Componentes de UI base
+│       ├── info-tooltip.tsx   # Tooltips explicativos IA
+│       ├── time-filter.tsx    # Filtros de período temporal
+│       └── [otros...]         # Componentes base Radix UI
 ├── 📁 contexts/                # Contextos de React
+│   ├── user-context.tsx       # Gestión de usuarios empresariales
 │   └── scenario-context.tsx    # Contexto para compartir datos
 ├── 📁 hooks/                   # Hooks personalizados
-│   └── use-news.ts            # Hook para obtener noticias
+│   ├── use-news.ts            # Hook para obtener noticias
+│   ├── use-mobile.ts          # Detección responsiva
+│   └── use-toast.ts           # Sistema de notificaciones
 ├── 📁 lib/                     # Utilidades
 │   └── utils.ts               # Funciones de utilidad
 └── 📁 public/                 # Assets estáticos
+    └── smarthedginglogo.png   # Logo de la empresa
 ```
 
 ## 🔧 Scripts Disponibles
@@ -186,6 +250,36 @@ Selector de período de tiempo para filtrar datos históricos.
 />
 ```
 
+### 🏢 Header
+Componente de navegación principal con integración de usuario empresarial.
+
+```typescript
+<Header />
+// Muestra: Logo + Navegación + Perfil de usuario + Contexto empresarial
+```
+
+### ℹ️ InfoTooltip
+Tooltips explicativos para puntuaciones de riesgo generadas por IA.
+
+```typescript
+<InfoTooltip content="Explicación detallada del score de riesgo">
+  <Button variant="ghost" size="sm">8/10</Button>
+</InfoTooltip>
+```
+
+### 👤 Contextos de Usuario
+Sistema completo de gestión empresarial con persistencia.
+
+```typescript
+// UserContext proporciona:
+- userProfile: BusinessProfile | null
+- isLoggedIn: boolean  
+- login: (profile) => void
+- logout: () => void
+- updateProfile: (updates) => void
+- generateMCPUrl: (baseUrl) => string
+```
+
 ## 🔗 Integración de APIs
 
 ### 📈 API de Noticias
@@ -216,6 +310,47 @@ interface CurrencyData {
   max: number;
   timestamp: string;
 }
+```
+
+## ⚙️ Configuración y Variables de Entorno
+
+### Variables de Entorno Requeridas
+Crea un archivo `.env.local` en la raíz del proyecto:
+
+```env
+# APIs de Noticias (opcionales para demo)
+NEXT_PUBLIC_NEWS_API_KEY=tu_news_api_key
+NEXT_PUBLIC_BLOOMBERG_API_KEY=tu_bloomberg_key
+NEXT_PUBLIC_REUTERS_API_KEY=tu_reuters_key
+
+# MCP Configuration (opcional)
+NEXT_PUBLIC_MCP_BASE_URL=https://api.smarthedging.com
+NEXT_PUBLIC_MCP_API_VERSION=v1
+
+# Configuración de la aplicación
+NEXT_PUBLIC_APP_NAME=Smart Hedging Home
+NEXT_PUBLIC_COMPANY_NAME=Tu Empresa
+```
+
+### Configuración de Desarrollo
+```typescript
+// El sistema funciona sin APIs reales usando datos de demo
+// Para producción, configura las APIs reales en:
+// hooks/use-news.ts - líneas 20-30
+
+const USE_REAL_APIs = process.env.NODE_ENV === 'production';
+```
+
+### Configuración MCP
+```typescript
+// URLs generadas automáticamente incluyen:
+// - Perfil empresarial completo
+// - Monedas operativas
+// - Tolerancia al riesgo
+// - Timestamp para contexto temporal
+
+// Ejemplo de URL MCP generada:
+// https://api.smarthedging.com/analysis?company=TechCorp&industry=technology&revenue=10M-50M&risk=moderate&currencies=USD,EUR,MXN&objectives=cashflow,budget&timestamp=1698235200
 ```
 
 ## 🚨 Solución de Problemas
@@ -264,14 +399,73 @@ npm run build
 1. Modifica el array `strategies` en `app/scenario/page.tsx`
 2. Actualiza la función `generatePayoffData` para la nueva estrategia
 
-## 📊 Datos de Prueba
+## � Flujo de Usuario Completo
+
+### 1. Onboarding Empresarial
+```
+/login → Selección de cuenta demo → Configuración inicial
+```
+
+### 2. Configuración del Perfil
+```
+/settings → Perfil empresarial → Monedas operativas → Objetivos de cobertura
+```
+
+### 3. Análisis de Riesgo
+```
+/ (Dashboard) → Análisis sincronizado → Filtros temporales → Insights IA
+```
+
+### 4. Creación de Estrategias
+```
+/scenario → Constructor de opciones → Análisis de payoff → Ejecutar estrategia
+```
+
+### 5. Integración MCP
+```
+Cualquier página → URL con contexto empresarial generada automáticamente
+```
+
+## 🧪 Testing y Validación
+
+### Cuentas Demo Incluidas
+```typescript
+// Cuentas empresariales de prueba disponibles en /login
+const DEMO_ACCOUNTS = [
+  {
+    id: 'tech-startup',
+    companyName: 'TechCorp Solutions', 
+    industry: 'Technology',
+    annualRevenue: '10M-50M'
+  },
+  {
+    id: 'manufacturing',
+    companyName: 'Global Manufacturing Inc',
+    industry: 'Manufacturing', 
+    annualRevenue: '50M-200M'
+  },
+  // ... más cuentas
+];
+```
+
+### Testing del Sistema MCP
+```typescript
+// Verifica que las URLs se generen correctamente
+const mcpUrl = generateMCPUrl('https://api.smarthedging.com');
+console.log(mcpUrl);
+// Output esperado: URL con todos los parámetros empresariales
+```
+
+## �📊 Datos de Prueba
 
 El proyecto incluye datos simulados para desarrollo:
 
 - **3 noticias de ejemplo** con diferentes puntuaciones de impacto
-- **5 pares de divisas** con datos históricos simulados
+- **5 pares de divisas** con datos históricos simulados  
 - **4 estrategias de opciones** con cálculos de payoff
 - **Múltiples períodos de tiempo** para filtros
+- **6 cuentas demo empresariales** con perfiles completos
+- **URLs MCP generadas** con contexto empresarial real
 
 ## 🤝 Contribución
 
