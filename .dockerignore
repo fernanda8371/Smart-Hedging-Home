@@ -1,0 +1,47 @@
+# Dependencias
+node_modules
+npm-debug.log*
+pnpm-debug.log*
+
+# Archivos de desarrollo
+.next
+.vercel
+.env*.local
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# README y documentación
+README.md
+CHANGELOG.md
+LICENSE
+
+# Archivos de configuración IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Archivos temporales
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+.nyc_output
+
+# Testing
+.jest
+
+# Archivos de build
+dist/
+build/

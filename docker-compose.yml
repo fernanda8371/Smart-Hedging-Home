@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Aplicación principal SmartHedging
+  smart-hedging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    env_file:
+      - .env.local
+    volumes:
+      # Para desarrollo hot-reload (comentar en producción)
+      - .:/app
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - smart-hedging-network
+
+  # Base de datos (opcional - para futuras funcionalidades)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: smarthedging
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - smart-hedging-network
+
+  # Redis para caché (opcional - para futuras funcionalidades)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - smart-hedging-network
+
+networks:
+  smart-hedging-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:

@@ -1,0 +1,76 @@
+"use client"
+
+import Link from "next/link"
+import Image from "next/image"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { useUser } from "@/contexts/user-context"
+
+export function Header() {
+  const { userProfile, isLoggedIn, logout } = useUser()
+  return (
+    <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <div className="relative w-10 h-10">
+            <Image 
+              src="/smarthedginglogo.png" 
+              alt="SmartHedging Logo" 
+              fill
+              className="object-contain"
+            />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">SmartHedging</h1>
+            <p className="text-xs text-gray-500">for Banorte</p>
+          </div>
+        </Link>
+
+        <nav className="flex items-center gap-8">
+          <Link href="/saved" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+            Saved
+          </Link>
+          <Link href="/recent" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+            Recent
+          </Link>
+          <Link href="/settings" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+            Settings
+          </Link>
+        </nav>
+
+        <div className="flex items-center gap-4">
+          {isLoggedIn && userProfile ? (
+            <>
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium text-gray-900">{userProfile.companyName}</p>
+                <p className="text-xs text-gray-500">{userProfile.currency} • {userProfile.riskTolerance} risk</p>
+              </div>
+              <Avatar className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
+                <AvatarImage src="/placeholder-user.png" />
+                <AvatarFallback className="bg-blue-100 text-blue-700">
+                  {userProfile.companyName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                onClick={logout}
+                variant="outline"
+                className="rounded-full border-blue-500 text-blue-500 hover:bg-blue-50 bg-transparent transition-colors"
+              >
+                Log Out
+              </Button>
+            </>
+          ) : (
+            <Link href="/login">
+              <Button
+                variant="outline"
+                className="rounded-full border-blue-500 text-blue-500 hover:bg-blue-50 bg-transparent transition-colors"
+              >
+                Log In
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}
