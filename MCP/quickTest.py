@@ -1,5 +1,5 @@
 # quick_test.py
-from server import _ask_gemini_core
+from MCP.server import _ask_gemini_core
 print(_ask_gemini_core("Dame una lista de las 10 noticias financieras mas relevantes del momento."))
 
 
