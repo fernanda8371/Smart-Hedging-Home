@@ -20,6 +20,14 @@ export function runSimulation(config: SimulationConfig): SimulationResult {
     strategy.params
   )
   const initial_cost = strategy.params.premium_per_contract * strategy.params.quantity_contracts
+
+  console.log('=== SIMULATION DEBUG ===')
+  console.log('Strategy params:', strategy.params)
+  console.log('Premium per contract:', strategy.params.premium_per_contract)
+  console.log('Quantity:', strategy.params.quantity_contracts)
+  console.log('Initial cost (premium paid):', initial_cost)
+  console.log('Initial price:', scenario.initial_price)
+  console.log('Strike price:', strategy.params.strike_price)
   
   const option_values: Array<{ day: number; value: number; intrinsic: number }> = []
   const strategy_pnl: Array<{ day: number; pnl: number; total_value: number }> = []

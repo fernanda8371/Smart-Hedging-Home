@@ -13,6 +13,9 @@ import { Badge } from "@/components/ui/badge"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { useScenario } from "@/contexts/scenario-context"
 import { ComposedChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import {
+  TooltipProvider,
+} from "@/components/ui/tooltip"
 
 import { LineChart, Line } from 'recharts'
 
@@ -236,6 +239,7 @@ export default function ScenarioPage() {
   }
 
   return (
+	    <TooltipProvider>
 	<div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header - Keep exact same style */}
       <Header />
@@ -393,6 +397,7 @@ export default function ScenarioPage() {
 		</div>
       </div>
 	</div>
+	    </TooltipProvider>		
   )
 }
 
@@ -409,7 +414,7 @@ function ScenarioIsland({
   active: boolean
   completed: boolean
   onSubmit: (data: ScenarioParams) => void
-  onPreviewUpdate: (path: Array<{ day: number; price: number }>) => void  // Add this
+  onPreviewUpdate: (path: Array<{ day: number; price: number }>) => void
   initialData: Partial<ScenarioParams>
 }) {
   const [formData, setFormData] = useState<Partial<ScenarioParams>>(initialData)
@@ -418,7 +423,7 @@ function ScenarioIsland({
 
   const schema = ScenarioBuilder.getParameterSchema()
   const presets = ScenarioBuilder.getPresets(formData.currency_pair || 'USD/MXN')
-  const formFields = generateFormFields(schema)
+  const formFields = generateFormFields(schema) // Keep this line
 
   const handlePresetSelect = (presetKey: string) => {
     if (presetKey && presetKey !== 'custom' && presets[presetKey]) {
@@ -434,7 +439,6 @@ function ScenarioIsland({
     const newData = { ...formData, [field]: value }
     setFormData(newData)
     
-    // If currency pair changed, update presets
     if (field === 'currency_pair' && selectedPreset && selectedPreset !== 'custom') {
       const newPresets = ScenarioBuilder.getPresets(value)
       if (newPresets[selectedPreset]) {
@@ -442,7 +446,6 @@ function ScenarioIsland({
       }
     }
     
-    // Clear error for this field
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
     }
@@ -539,24 +542,19 @@ function ScenarioIsland({
 
         {/* Other Parameters */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-		  {active && (
-			<Button 
-			  variant="outline" 
-			  className="w-full mb-4"
-			  onClick={() => {
-				const filledData = ScenarioBuilder.fillDefaults(formData)
-				const validation = ScenarioBuilder.validateParameters(filledData)
-				if (validation.valid) {
-				  const path = generatePricePath(filledData)
-				  onPreviewUpdate(path)  // Call the prop
-				} else {
-				  setErrors(validation.errors)
-				}
-			  }}
-			>
-			   Update Preview
-			</Button>
-		  )}
+          {/* REMOVE THIS ENTIRE BLOCK - this is what's causing the infinite loop */}
+          {/* 
+          {active && (
+            <Button 
+              variant="outline" 
+              className="w-full mb-4"
+              onClick={() => {...}}
+            >
+               Update Preview
+            </Button>
+          )}
+          */}
+          
           {otherFields.map(field => (
             <div key={field.name}>
               <Label className="flex items-center gap-1">
@@ -1007,18 +1005,25 @@ function SimulationResultsIsland({
 }) {
   const [result, setResult] = useState<SimulationResult | null>(null)
   const [isRunning, setIsRunning] = useState(false)
-  const hasRun = useRef(false)
 
-  useEffect(() => {
-    if (active && !hasRun.current) {
-      hasRun.current = true
-      setIsRunning(true)
+  const runSimulationNow = () => {
+    setIsRunning(true)
+    try {
       const simResult = runSimulation(config)
       setResult(simResult)
-      setIsRunning(false)
       onComplete()
+    } catch (error) {
+      console.error('Simulation failed:', error)
+    } finally {
+      setIsRunning(false)
     }
-  }, [active, config, onComplete])
+  }
+
+  useEffect(() => {
+    if (active) {
+      runSimulationNow()
+    }
+  }, [active, config])
 
   const generatePnlChartData = () => {
     if (!result) return []
@@ -1041,11 +1046,26 @@ function SimulationResultsIsland({
           Simulation Results
           {completed && <CheckCircle2 className="w-5 h-5 text-green-500" />}
         </CardTitle>
+        {/* Add the re-run button in the header */}
+        {active && (
+          <Button 
+            onClick={runSimulationNow} 
+            disabled={isRunning}
+            variant="outline" 
+            size="sm"
+            className="ml-auto"
+          >
+            {isRunning ? 'Running...' : 'Re-run Simulation'}
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         {isRunning ? (
           <div className="h-64 flex items-center justify-center text-gray-500">
-            Running simulation...
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              Running simulation...
+            </div>
           </div>
         ) : result ? (
           <>
@@ -1106,6 +1126,17 @@ function SimulationResultsIsland({
                 </p>
               </div>
             )}
+
+            {/* Add another re-run button at the bottom for convenience */}
+            <div className="pt-4 border-t">
+              <Button 
+                onClick={runSimulationNow} 
+                disabled={isRunning}
+                className="w-full"
+              >
+                {isRunning ? 'Running Simulation...' : 'Re-run with Current Parameters'}
+              </Button>
+            </div>
           </>
         ) : (
           <p className="text-gray-600">Simulation ready to run...</p>
