@@ -7,7 +7,7 @@ import { TrendingUp, TrendingDown, RefreshCw, Wifi, WifiOff } from "lucide-react
 import { TimeFilter } from "@/components/ui/time-filter"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { Button } from "@/components/ui/button"
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from "recharts"
 import { useCurrencyRates, useHistoricalRates } from "@/hooks/use-fixer-rates"
 
 interface CurrencyPair {
@@ -61,6 +61,61 @@ const getChartData = (period: string, pair: string, historicalData?: Array<{ tim
   }
   
   return dataByPeriod[period as keyof typeof dataByPeriod] || dataByPeriod['1D']
+}
+
+// Calculate min/max projections for fixed future periods using financial volatility models
+// These projections are INDEPENDENT of the time filter (which only affects historical chart view)
+const calculateProjections = (currentRate: number) => {
+  // Annual volatility estimates for different currency pairs (in finance, volatility is typically annualized)
+  const annualVolatility = 0.10 // 10% annual volatility (typical for major FX pairs)
+  
+  // Convert annual volatility to period-specific volatility using square root of time rule
+  // This is standard in financial risk management (Black-Scholes model)
+  const periodMultipliers = {
+    '7D': Math.sqrt(7/252),    // Next 7 days
+    '1M': Math.sqrt(21/252),   // Next month (~21 trading days)
+    '3M': Math.sqrt(63/252),   // Next quarter (~63 trading days)
+    '1Y': Math.sqrt(252/252),  // Next year (252 trading days)
+  }
+  
+  // Use 2 standard deviations for ~95% confidence interval (standard in finance)
+  const confidenceLevel = 2
+  
+  // Calculate projections for multiple future periods
+  const projections = {
+    '7D': {
+      period: '7 Days',
+      label: 'Next Week',
+      volatility: annualVolatility * periodMultipliers['7D'],
+    },
+    '1M': {
+      period: '1 Month',
+      label: 'Next Month',
+      volatility: annualVolatility * periodMultipliers['1M'],
+    },
+    '3M': {
+      period: '3 Months',
+      label: 'Next Quarter',
+      volatility: annualVolatility * periodMultipliers['3M'],
+    },
+    '1Y': {
+      period: '1 Year',
+      label: 'Next Year',
+      volatility: annualVolatility * periodMultipliers['1Y'],
+    }
+  }
+  
+  // Calculate min/max for each period
+  return Object.entries(projections).map(([key, data]) => {
+    const expectedMove = currentRate * data.volatility * confidenceLevel
+    return {
+      period: data.period,
+      label: data.label,
+      min: currentRate - expectedMove,
+      max: currentRate + expectedMove,
+      volatility: data.volatility * 100 // Convert to percentage
+    }
+  })
 }
 
 export function MetricsColumn({ 
@@ -205,26 +260,44 @@ export function MetricsColumn({
               {/* Chart */}
               <div className="relative flex-1 w-full mb-3">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
                     <XAxis 
                       dataKey="time" 
-                      axisLine={false} 
+                      axisLine={{ stroke: "#D1D5DB" }}
                       tickLine={false} 
-                      tick={{ fill: "#9CA3AF", fontSize: 10 }} 
+                      tick={{ fill: "#6B7280", fontSize: 11 }}
+                      height={25}
                     />
                     <YAxis
-                      domain={['dataMin - 0.5%', 'dataMax + 0.5%']}
-                      axisLine={false}
+                      domain={['auto', 'auto']}
+                      axisLine={{ stroke: "#D1D5DB" }}
                       tickLine={false}
-                      tick={{ fill: "#9CA3AF", fontSize: 10 }}
-                      tickFormatter={(value) => value.toFixed(4)}
+                      tick={{ fill: "#6B7280", fontSize: 11 }}
+                      tickFormatter={(value) => {
+                        if (value >= 1000) return value.toFixed(0)
+                        if (value >= 100) return value.toFixed(1)
+                        if (value >= 1) return value.toFixed(2)
+                        return value.toFixed(4)
+                      }}
+                      width={60}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        padding: '8px 12px'
+                      }}
+                      formatter={(value: any) => [Number(value).toFixed(4), 'Rate']}
                     />
                     <Line
                       type="monotone"
                       dataKey="price"
                       stroke="#3B82F6"
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                       dot={false}
+                      activeDot={{ r: 5, fill: '#3B82F6' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -262,35 +335,27 @@ export function MetricsColumn({
                   Macro outlook from MRACoreEconomics for the selected period
                 </h3>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-gray-500">Min</span>
-                      <InfoTooltip content={`Minimum ${pairData.value} value for ${timePeriod} period`} />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs font-medium text-gray-900">
-                        {pairData.min.toFixed(4)}
+                  {calculateProjections(pairData.rate).map((projection, idx) => (
+                    <div key={projection.period} className="space-y-1">
+                      {idx > 0 && <div className="border-t border-gray-50 pt-1" />}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-medium text-gray-600">{projection.label}</span>
+                          <InfoTooltip content={`Projected range for ${pairData.value} over ${projection.period} (95% confidence, ±${projection.volatility.toFixed(1)}% vol)`} />
+                        </div>
                       </div>
-                      <div className="text-[10px] text-gray-400">
-                        {timePeriod} period
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-gray-500">Max</span>
-                      <InfoTooltip content={`Maximum ${pairData.value} value for ${timePeriod} period`} />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs font-medium text-gray-900">
-                        {pairData.max.toFixed(4)}
-                      </div>
-                      <div className="text-[10px] text-gray-400">
-                        {timePeriod} period
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500">Low:</span>
+                          <span className="font-medium text-red-600">{projection.min.toFixed(4)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500">High:</span>
+                          <span className="font-medium text-green-600">{projection.max.toFixed(4)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
 
                 <div className="pt-2 border-t border-gray-100">
@@ -370,10 +435,11 @@ export function MetricsColumn({
           const isSelectedPair = pairData.value === selectedCurrency
           const chartData = getChartData(timePeriod, pairData.value, isSelectedPair ? historicalChartData : undefined)
           const pairImpactScores = impactPairs.filter(pair => pair.pair === pairData.value)
+          const projections = calculateProjections(pairData.rate)
           
           return (
-            <Card key={pairData.value} className="h-64">
-              <CardContent className="p-4 h-full flex flex-col">
+            <Card key={pairData.value} className="h-auto">
+              <CardContent className="p-4 pt-0 pb-0">
                 {/* Currency Header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -403,22 +469,39 @@ export function MetricsColumn({
                 </div>
 
                 {/* Mini Chart */}
-                <div className="relative flex-1 w-full mb-3">
+                <div className="relative h-32 w-full mb-3">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
+                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
                       <XAxis 
                         dataKey="time" 
-                        axisLine={false} 
+                        axisLine={{ stroke: "#E5E7EB" }}
                         tickLine={false} 
-                        tick={{ fill: "#9CA3AF", fontSize: 9 }} 
-                        hide={true}
+                        tick={{ fill: "#9CA3AF", fontSize: 10 }}
+                        height={20}
                       />
                       <YAxis
-                        domain={['dataMin - 0.5%', 'dataMax + 0.5%']}
-                        axisLine={false}
+                        domain={['auto', 'auto']}
+                        axisLine={{ stroke: "#E5E7EB" }}
                         tickLine={false}
-                        tick={{ fill: "#9CA3AF", fontSize: 9 }}
-                        hide={true}
+                        tick={{ fill: "#9CA3AF", fontSize: 10 }}
+                        tickFormatter={(value) => {
+                          if (value >= 1000) return value.toFixed(0)
+                          if (value >= 100) return value.toFixed(1)
+                          if (value >= 1) return value.toFixed(2)
+                          return value.toFixed(3)
+                        }}
+                        width={45}
+                      />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #E5E7EB',
+                          borderRadius: '6px',
+                          padding: '6px 10px',
+                          fontSize: '12px'
+                        }}
+                        formatter={(value: any) => Number(value).toFixed(4)}
                       />
                       <Line
                         type="monotone"
@@ -426,35 +509,52 @@ export function MetricsColumn({
                         stroke={index % 2 === 0 ? "#3B82F6" : "#10B981"}
                         strokeWidth={2}
                         dot={false}
+                        activeDot={{ r: 4, fill: index % 2 === 0 ? "#3B82F6" : "#10B981" }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
 
                 {/* Impact Scores */}
+                <div className="border-t border-gray-100 pt-2 mb-2">
+                  <div className="text-[10px] text-gray-500 font-medium mb-1">Impact Score</div>
+                  <div className="flex gap-2">
+                    {pairImpactScores.map((pair, scoreIndex) => (
+                      <div key={scoreIndex} className="flex items-center gap-1">
+                        <span className={`text-xs ${pair.direction === "up" ? "text-green-600" : "text-red-600"}`}>
+                          {pair.direction === "up" ? "↗" : "↘"}
+                        </span>
+                        <span className={`text-xs font-bold px-1 py-0.5 rounded ${
+                          pair.score === "10/10" ? "text-red-600 bg-red-50" : 
+                          pair.score === "8/10" ? "text-orange-600 bg-orange-50" : "text-green-600 bg-green-50"
+                        }`}>
+                          {pair.score}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Future Projections Table */}
                 <div className="border-t border-gray-100 pt-2">
-                  <div className="text-[10px] text-gray-500 mb-1 font-medium">Impact Score</div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
-                      {pairImpactScores.map((pair, scoreIndex) => (
-                        <div key={scoreIndex} className="flex items-center gap-1">
-                          <span className={`text-xs ${pair.direction === "up" ? "text-green-600" : "text-red-600"}`}>
-                            {pair.direction === "up" ? "↗" : "↘"}
-                          </span>
-                          <span className={`text-xs font-bold px-1 py-0.5 rounded ${
-                            pair.score === "10/10" ? "text-red-600 bg-red-50" : 
-                            pair.score === "8/10" ? "text-orange-600 bg-orange-50" : "text-green-600 bg-green-50"
-                          }`}>
-                            {pair.score}
-                          </span>
+                  <div className="text-[10px] text-gray-500 font-medium mb-2">Future Projections (95% confidence)</div>
+                  <div className="space-y-1">
+                    {projections.map((projection) => (
+                      <div key={projection.period} className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600 font-medium w-20">{projection.label}:</span>
+                        <div className="flex gap-3 items-center">
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-400 text-[10px]">Low</span>
+                            <span className="text-red-600 font-semibold">{projection.min.toFixed(4)}</span>
+                          </div>
+                          <span className="text-gray-300">|</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-400 text-[10px]">High</span>
+                            <span className="text-green-600 font-semibold">{projection.max.toFixed(4)}</span>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    <div className="text-right text-xs text-gray-500">
-                      <div>Min: {pairData.min.toFixed(4)}</div>
-                      <div>Max: {pairData.max.toFixed(4)}</div>
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>

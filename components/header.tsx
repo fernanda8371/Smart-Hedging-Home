@@ -28,13 +28,13 @@ export function Header() {
 
         <nav className="flex items-center gap-8">
           <Link href="/saved" className="text-link hover:text-link-hover font-medium transition-colors">
-            Saved
+            Saved Scenarios
           </Link>
           <Link href="/scenario" className="text-link hover:text-link-hover font-medium transition-colors">
             Scenario Builder
           </Link>
           <Link href="/settings" className="text-link hover:text-link-hover font-medium transition-colors">
-            Settings
+            Business Settings
           </Link>
         </nav>
 
