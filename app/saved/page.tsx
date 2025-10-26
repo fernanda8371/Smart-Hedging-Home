@@ -5,7 +5,7 @@ import { Header } from "@/components/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, Edit, Play, Calendar, TrendingUp } from "lucide-react"
+import { Trash2, Edit, Play, Calendar, TrendingUp, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 
@@ -155,22 +155,33 @@ export default function SavedPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="space-y-2 pt-2">
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleLoadScenario(scenario)}
+                        className="flex-1 bg-primary hover:bg-primary/90"
+                        size="sm"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Load
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(scenario.id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Button
-                      onClick={() => handleLoadScenario(scenario)}
-                      className="flex-1 bg-primary hover:bg-primary/90"
-                      size="sm"
-                    >
-                      <Play className="h-4 w-4 mr-1" />
-                      Load
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(scenario.id)}
+                      onClick={() => window.open('https://www.banorte.com/wps/portal/empresas/Home/empresas-corporativos/internacional/derivados', '_blank')}
                       variant="outline"
                       size="sm"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
+                      className="w-full bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <ExternalLink className="h-3 w-3 mr-1.5" />
+                      Ejecutar con Banorte
                     </Button>
                   </div>
                 </CardContent>
