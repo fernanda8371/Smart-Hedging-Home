@@ -19,7 +19,7 @@ export function runSimulation(config: SimulationConfig): SimulationResult {
     scenario.time_horizon_years,
     strategy.params
   )
-  const initial_cost = initial_option_value.total_value
+  const initial_cost = strategy.params.premium_per_contract * strategy.params.quantity_contracts
   
   const option_values: Array<{ day: number; value: number; intrinsic: number }> = []
   const strategy_pnl: Array<{ day: number; pnl: number; total_value: number }> = []

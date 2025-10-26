@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { ArrowLeft, Calculator, TrendingUp, Zap, CheckCircle2, Circle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,6 +14,32 @@ import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { useScenario } from "@/contexts/scenario-context"
 import { ComposedChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
+import { LineChart, Line } from 'recharts'
+
+// Add these type definitions
+interface SimulationConfig {
+  scenario: ScenarioParams
+  strategy: {
+    type: StrategyType
+    params: Record<string, any>
+  }
+  exit: {
+    type: string
+    params: Record<string, any>
+  }
+}
+
+interface SimulationResult {
+  strategy_pnl: Array<{ day: number; pnl: number }>
+  final_result: {
+    total_pnl: number
+    max_loss: number
+    max_gain: number
+    win_probability: number
+    exit_day?: number
+    exit_reason?: string
+  }
+}
 
 // Import our simulation system
 import { 
@@ -210,186 +236,166 @@ export default function ScenarioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+	<div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header - Keep exact same style */}
-      {/*
-<header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-xl font-semibold text-gray-900">Currency Risk Simulator</h1>
-            <p className="text-sm text-gray-500">
-              {scenarioData?.newsTitle ? 
-                `Modeling hedging strategies for: ${scenarioData.newsTitle.slice(0, 60)}...` :
-                'Build and test currency hedging strategies with real market scenarios'
-              }
-            </p>
-          </div>
-          <div className="text-right bg-blue-50 px-3 py-2 rounded-lg border">
-            <p className="text-lg font-semibold text-blue-900">
-              {scenarioParams.currency_pair || 'USD/MXN'}
-            </p>
-            <p className="text-xs text-blue-600">Active Currency Pair</p>
-          </div>
-        </div>
-      </header> */}
-
-	  <Header />
+      <Header />
 
       <div className="p-6 max-w-7xl mx-auto space-y-6">
-        
-        {/* Progress Indicator - Same as before */}
-        <Card>
+      
+		{/* Progress Indicator - Same as before */}
+		<Card>
           <CardContent className="py-4">
-            <div className="flex items-center justify-between">
+			<div className="flex items-center justify-between">
               {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
+				<div key={step.id} className="flex items-center">
                   <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${
+					<div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${
                       step.completed ? 'bg-green-500 border-green-500 text-white' :
-                      step.active ? 'border-blue-500 text-blue-500' :
-                      'border-gray-300 text-gray-400'
-                    }`}>
+						step.active ? 'border-blue-500 text-blue-500' :
+						  'border-gray-300 text-gray-400'
+					}`}>
                       {step.completed ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-                    </div>
-                    <span className={`text-sm font-medium ${
+					</div>
+					<span className={`text-sm font-medium ${
                       step.active ? 'text-blue-600' : step.completed ? 'text-green-600' : 'text-gray-400'
-                    }`}>
+					}`}>
                       {step.title}
-                    </span>
+					</span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className={`w-12 h-px mx-4 ${
+					<div className={`w-12 h-px mx-4 ${
                       step.completed ? 'bg-green-500' : 'bg-gray-300'
-                    }`} />
+					}`} />
                   )}
-                </div>
+				</div>
               ))}
-            </div>
+			</div>
           </CardContent>
-        </Card>
+		</Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Configuration Islands */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Island 1: Scenario Configuration */}
-            {currentStep >= 0 && (
+			{/* Island 1: Scenario Configuration */}
+			{currentStep >= 0 && (
               <ScenarioIsland
-                active={currentStep === 0}
-                completed={steps[0].completed}
-                onSubmit={handleScenarioSubmit}
-				onPreviewUpdate={(path) => setSimulatedPath(path)}  // Add this prop
-                initialData={scenarioParams}
+				active={currentStep === 0}
+				completed={steps[0].completed}
+				onSubmit={handleScenarioSubmit}
+				onPreviewUpdate={(path) => setSimulatedPath(path)}
+				initialData={scenarioParams}
               />
-            )}
+			)}
 
-            {/* Island 2: Strategy Selection */}
-            {currentStep >= 1 && (
+			{/* Island 2: Strategy Selection */}
+			{currentStep >= 1 && (
               <StrategySelectionIsland
-                active={currentStep === 1}
-                completed={steps[1].completed}
-                scenarioParams={scenarioParams as ScenarioParams}
-                onSelect={handleStrategySelect}
-                selectedStrategy={selectedStrategyType}
+				active={currentStep === 1}
+				completed={steps[1].completed}
+				scenarioParams={scenarioParams as ScenarioParams}
+				onSelect={handleStrategySelect}
+				selectedStrategy={selectedStrategyType}
               />
-            )}
+			)}
 
-            {/* Island 3: Strategy Parameters - Coming in next phase */}
-            {currentStep >= 2 && selectedStrategyType && (
-			  <StrategyParametersIsland
+			{/* Island 3: Strategy Parameters */}
+			{currentStep >= 2 && selectedStrategyType && (
+              <StrategyParametersIsland
 				active={currentStep === 2}
 				completed={steps[2].completed}
 				strategyType={selectedStrategyType}
+				scenarioParams={scenarioParams as ScenarioParams}
 				onSubmit={(params) => {
-				  setStrategyParams(params)
-				  updateStepStatus(2, true)
-				  setCurrentStep(3)
+                  setStrategyParams(params)
+                  updateStepStatus(2, true)
+                  setCurrentStep(3)
 				}}
 				initialData={strategyParams}
-			  />
+              />
 			)}
 
 			{currentStep >= 3 && selectedStrategyType && (
-			  <ExitStrategyIsland
+              <ExitStrategyIsland
 				active={currentStep === 3}
 				completed={steps[3].completed}
 				strategyType={selectedStrategyType}
 				onSubmit={(exitType, params) => {
-				  setSelectedExitType(exitType)
-				  setExitParams(params)
-				  updateStepStatus(3, true)
-				  setCurrentStep(4)
+                  setSelectedExitType(exitType)
+                  setExitParams(params)
+                  updateStepStatus(3, true)
+                  setCurrentStep(4)
 				}}
 				initialExitType={selectedExitType}
 				initialData={exitParams}
-			  />
+              />
 			)}
 
 			{currentStep >= 4 && selectedStrategyType && selectedExitType && (
-			  <SimulationResultsIsland
+              <SimulationResultsIsland
 				active={currentStep === 4}
 				completed={steps[4].completed}
 				config={{
-				  scenario: scenarioParams as ScenarioParams,
-				  strategy: {
+                  scenario: scenarioParams as ScenarioParams,
+                  strategy: {
 					type: selectedStrategyType,
 					params: strategyParams
-				  },
-				  exit: {
+                  },
+                  exit: {
 					type: selectedExitType,
 					params: exitParams
-				  }
+                  }
 				}}
-			  />
+				onComplete={() => updateStepStatus(4, true)}
+              />
 			)}
+          </div>
 
           {/* Right Column: Scenario Visualization */}
           <div className="lg:col-span-1">
-            {simulatedPath ? (
+			{simulatedPath ? (
               <Card className="sticky top-6">
-                <CardHeader>
+				<CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Scenario Preview
+					<TrendingUp className="w-5 h-5" />
+														Scenario Preview
                   </CardTitle>
-                </CardHeader>
-                <CardContent>
+				</CardHeader>
+				<CardContent>
                   <CandlestickChart data={generateCandlestickData(simulatedPath)} />
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <div className="text-center p-2 bg-gray-50 rounded">
+					<div className="text-center p-2 bg-gray-50 rounded">
                       <p className="text-gray-600">Start Price</p>
                       <p className="font-semibold">{simulatedPath[0]?.price.toFixed(4)}</p>
-                    </div>
-                    <div className="text-center p-2 bg-gray-50 rounded">
+					</div>
+					<div className="text-center p-2 bg-gray-50 rounded">
                       <p className="text-gray-600">End Price</p>
                       <p className="font-semibold">{simulatedPath[simulatedPath.length - 1]?.price.toFixed(4)}</p>
-                    </div>
+					</div>
                   </div>
-                </CardContent>
+				</CardContent>
               </Card>
-            ) : (
+			) : (
               <Card className="sticky top-6 opacity-60">
-                <CardHeader>
+				<CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Scenario Preview
+					<TrendingUp className="w-5 h-5" />
+														Scenario Preview
                   </CardTitle>
-                </CardHeader>
-                <CardContent>
+				</CardHeader>
+				<CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
-                    <p>Configure scenario to see preview</p>
+					<p>Configure scenario to see preview</p>
                   </div>
-                </CardContent>
+				</CardContent>
               </Card>
-            )}
+			)}
           </div>
-        </div>
+		</div>
       </div>
-    </div>
+	</div>
   )
 }
+
 
 
 // Island 1: Scenario Configuration Component
@@ -724,12 +730,14 @@ function StrategyParametersIsland({
   active,
   completed,
   strategyType,
+  scenarioParams, // Add this prop
   onSubmit,
   initialData
 }: {
   active: boolean
   completed: boolean
   strategyType: StrategyType
+  scenarioParams: ScenarioParams // Add this type
   onSubmit: (params: Record<string, any>) => void
   initialData: Record<string, any>
 }) {
@@ -989,25 +997,28 @@ function ExitStrategyIsland({
 function SimulationResultsIsland({
   active,
   completed,
-  config
+  config,
+  onComplete
 }: {
   active: boolean
   completed: boolean
   config: SimulationConfig
+  onComplete: () => void
 }) {
   const [result, setResult] = useState<SimulationResult | null>(null)
   const [isRunning, setIsRunning] = useState(false)
+  const hasRun = useRef(false)
 
   useEffect(() => {
-    if (active) {
+    if (active && !hasRun.current) {
+      hasRun.current = true
       setIsRunning(true)
       const simResult = runSimulation(config)
       setResult(simResult)
       setIsRunning(false)
-      // Mark as completed once run
-      updateStepStatus(4, true)
+      onComplete()
     }
-  }, [active, config])
+  }, [active, config, onComplete])
 
   const generatePnlChartData = () => {
     if (!result) return []

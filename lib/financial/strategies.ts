@@ -78,6 +78,18 @@ export class LongCallStrategy extends TradingStrategy {
     
     filled.quantity_contracts = filled.quantity_contracts || 1
     filled.risk_free_rate = filled.risk_free_rate || 0.05
+
+	if (!filled.premium_per_contract || filled.premium_per_contract === 'calculated') {
+      const initial_time_to_expiry = 30 / 365 // 30 days
+      filled.premium_per_contract = blackScholes(
+		spotPrice,
+		filled.strike_price,
+		initial_time_to_expiry,
+		filled.risk_free_rate,
+		0.12,
+		'call'
+      )
+	}
     
     return filled as StrategyParams
   }
@@ -238,7 +250,7 @@ export class ProtectivePutStrategy extends TradingStrategy {
   }
 
   getCompatibleExitStrategies(): string[] {
-    return ['hold_to_expiry', 'stop_loss', 'dynamic_hedge']
+    return ['hold_to_expiry', 'stop_loss']
   }
 
   validateParameters(params: StrategyParams): ValidationResult {

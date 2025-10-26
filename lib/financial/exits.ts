@@ -146,16 +146,95 @@ export class TakeProfitExit extends ExitStrategy {
   }
 }
 
-// Exit Strategy Registry
+export class TrailingStopExit extends ExitStrategy {
+  getParameterSchema(): ParameterSchema {
+    return {
+      trailing_stop_percentage: {
+        type: 'percentage',
+        label: 'Trailing Stop %',
+        description: 'Exit when price falls this percentage from highest point',
+        default: -0.15, // 15% trailing stop
+        min: -0.50,
+        max: -0.05,
+        step: 0.05
+      }
+    }
+  }
+
+  validateParameters(params: ExitParams): ValidationResult {
+    const errors: Record<string, string> = {}
+    
+    if (params.trailing_stop_percentage >= 0) {
+      errors.trailing_stop_percentage = 'Trailing stop must be negative'
+    }
+
+    return { valid: Object.keys(errors).length === 0, errors }
+  }
+
+  fillDefaults(params: Partial<ExitParams>): ExitParams {
+    return {
+      trailing_stop_percentage: params.trailing_stop_percentage || -0.15,
+      highest_value: params.highest_value || 0
+    }
+  }
+
+  shouldExit(
+    current_day: number,
+    current_pnl: number,
+    current_value: number,
+    initial_cost: number,
+    params: ExitParams
+  ): { should_exit: boolean; reason?: string } {
+    // Update highest value seen
+    const highest_value = Math.max(params.highest_value || current_value, current_value)
+    params.highest_value = highest_value
+    
+    // Check if current value has fallen too much from peak
+    const drop_from_peak = (current_value - highest_value) / highest_value
+    
+    if (drop_from_peak <= params.trailing_stop_percentage) {
+      return {
+        should_exit: true,
+        reason: `Trailing stop triggered: ${(Math.abs(drop_from_peak) * 100).toFixed(1)}% drop from peak`
+      }
+    }
+    
+    return { should_exit: false }
+  }
+
+  getDescription(): string {
+    return 'Exit when position value falls a specified percentage from its highest point.'
+  }
+}
+
 export const EXIT_REGISTRY = {
   hold_to_expiry: HoldToExpiryExit,
   stop_loss: StopLossExit,
   take_profit: TakeProfitExit,
-} as const
+  trailing_stop: TrailingStopExit,
+}
 
 export type ExitType = keyof typeof EXIT_REGISTRY
 
 export function getExitStrategy(type: ExitType): ExitStrategy {
+  console.log('Available exit types:', Object.keys(EXIT_REGISTRY))
+  console.log('Requesting type:', type)
+  
   const ExitClass = EXIT_REGISTRY[type]
-  return new ExitClass()
+  console.log('ExitClass:', ExitClass)
+  console.log('ExitClass type:', typeof ExitClass)
+  console.log('ExitClass name:', ExitClass?.name)
+  console.log('Is function:', typeof ExitClass === 'function')
+  console.log('Has prototype:', !!ExitClass?.prototype)
+  
+  if (!ExitClass) {
+    throw new Error(`Exit strategy ${type} not found`)
+  }
+  
+  try {
+    return new ExitClass()
+  } catch (error) {
+    console.error('Error creating instance:', error)
+    throw error
+  }
 }
