@@ -22,7 +22,7 @@ export default function LoginPage() {
     companyName: '',
     businessDescription: '',
     annualRevenue: 0,
-    currency: 'MXN',
+    currency: 'USD',
     operatingCurrencies: ['MXN', 'USD'],
     riskTolerance: 'medium',
     hedgingObjective: '',
@@ -37,10 +37,10 @@ export default function LoginPage() {
   const handleLogin = () => {
     // Mock login - no authentication for now
     const mockProfile: UserProfile = {
-      companyName: 'Demo Company',
+      companyName: 'EFFO Company',
       businessDescription: 'A financial services company focused on currency risk management.',
       annualRevenue: 5000000,
-      currency: 'MXN',
+      currency: 'USD',
       operatingCurrencies: ['MXN', 'USD', 'EUR'],
       riskTolerance: 'medium',
       hedgingObjective: 'Protect against USD/MXN volatility',
