@@ -1,0 +1,242 @@
+{
+  "1": {
+    "titulo": "Políticas monetarias de los bancos centrales",
+    "descripcion": "Los bancos centrales ajustan parámetros para controlar la inflación sin frenar el crecimiento.",
+    "monedas_afectadas": ["USD", "EUR", "GBP"],
+    "calificacion_impacto": ["9/10", "4/10", "8/10"],
+    "imageUrl": "/squirrel-eating-nut.jpg",
+    "timestamp": "2025-10-25T20:30:00Z"
+  },
+  "2": {
+    "titulo": "Mercados financieros globales en alza",
+    "descripcion": "Los principales índices muestran avances ante expectativas de recuperación sostenida.",
+    "monedas_afectadas": ["USD", "CNY", "KRW"],
+    "calificacion_impacto": ["6/10", "8/10", "8/10"],
+    "imageUrl": "/smartphone-with-colorful-bokeh-lights.jpg",
+    "timestamp": "2025-10-25T14:30:00Z"
+  },
+  "3": {
+    "titulo": "Tensiones comerciales entre China y EE.UU.",
+    "descripcion": "Las fricciones comerciales reavivan la aversión al riesgo y afectan los flujos globales.",
+    "monedas_afectadas": ["BRL", "KRW"],
+    "calificacion_impacto": ["4/10", "8/10"],
+    "imageUrl": "/colorful-surfboards-on-beach.jpg",
+    "timestamp": "2025-10-25T08:30:00Z"
+  },
+  "4": {
+    "titulo": "Innovaciones tecnológicas en fintech",
+    "descripcion": "La adopción de soluciones fintech acelera pagos y servicios financieros.",
+    "monedas_afectadas": ["EUR", "AUD", "JPY"],
+    "calificacion_impacto": ["5/10", "4/10", "9/10"],
+    "imageUrl": "/placeholder.jpg",
+    "timestamp": "2025-10-25T02:30:00Z"
+  },
+  "5": {
+    "titulo": "Aumento de la inflación en EE.UU.",
+    "descripcion": "Las presiones de precios superan el objetivo y afectan el poder adquisitivo.",
+    "monedas_afectadas": ["GBP", "AUD"],
+    "calificacion_impacto": ["6/10", "7/10"],
+    "imageUrl": "/placeholder-user.jpg",
+    "timestamp": "2025-10-24T20:30:00Z"
+  },
+  "6": {
+    "titulo": "Recorte de tasas en economías emergentes",
+    "descripcion": "Varias economías reducen tipos para estimular la actividad.",
+    "monedas_afectadas": ["AUD", "ZAR", "TRY"],
+    "calificacion_impacto": ["6/10", "9/10", "6/10"],
+    "imageUrl": "/squirrel-eating-nut.jpg",
+    "timestamp": "2025-10-24T14:30:00Z"
+  },
+  "7": {
+    "titulo": "Repunte del precio del petróleo",
+    "descripcion": "El crudo se encarece por recortes de producción y mayor demanda.",
+    "monedas_afectadas": ["AUD", "CNY", "CAD"],
+    "calificacion_impacto": ["6/10", "7/10", "5/10"],
+    "imageUrl": "/smartphone-with-colorful-bokeh-lights.jpg",
+    "timestamp": "2025-10-24T08:30:00Z"
+  },
+  "8": {
+    "titulo": "Indicadores PMI muestran desaceleración",
+    "descripcion": "Los PMI manufactureros y de servicios se moderan en varias regiones.",
+    "monedas_afectadas": ["JPY", "BRL"],
+    "calificacion_impacto": ["9/10", "6/10"],
+    "imageUrl": "/colorful-surfboards-on-beach.jpg",
+    "timestamp": "2025-10-24T02:30:00Z"
+  },
+  "9": {
+    "titulo": "Resultados corporativos superan expectativas",
+    "descripcion": "Las utilidades baten estimaciones y apoyan el apetito por riesgo.",
+    "monedas_afectadas": ["CAD", "TRY", "ZAR"],
+    "calificacion_impacto": ["5/10", "7/10", "4/10"],
+    "imageUrl": "/placeholder.jpg",
+    "timestamp": "2025-10-23T20:30:00Z"
+  },
+  "10": {
+    "titulo": "Fortalecimiento del dólar por datos laborales",
+    "descripcion": "Los sólidos datos de empleo impulsan al billete verde.",
+    "monedas_afectadas": ["EUR", "KRW", "AUD"],
+    "calificacion_impacto": ["9/10", "7/10", "5/10"],
+    "imageUrl": "/placeholder-user.jpg",
+    "timestamp": "2025-10-23T14:30:00Z"
+  },
+  "11": {
+    "titulo": "Debilidad del euro ante incertidumbre política",
+    "descripcion": "La incertidumbre política presiona a la moneda común.",
+    "monedas_afectadas": ["INR", "BRL", "CAD"],
+    "calificacion_impacto": ["9/10", "7/10", "6/10"],
+    "imageUrl": "/squirrel-eating-nut.jpg",
+    "timestamp": "2025-10-23T08:30:00Z"
+  },
+  "12": {
+    "titulo": "Apreciación del yen por demanda de refugio",
+    "descripcion": "Búsqueda de refugio fortalece a la divisa japonesa.",
+    "monedas_afectadas": ["AUD", "KRW"],
+    "calificacion_impacto": ["7/10", "8/10"],
+    "imageUrl": "/smartphone-with-colorful-bokeh-lights.jpg",
+    "timestamp": "2025-10-23T02:30:00Z"
+  },
+  "13": {
+    "titulo": "Reapertura económica impulsa divisas cíclicas",
+    "descripcion": "La reapertura global favorece a monedas ligadas al ciclo económico.",
+    "monedas_afectadas": ["KRW", "EUR"],
+    "calificacion_impacto": ["9/10", "6/10"],
+    "imageUrl": "/colorful-surfboards-on-beach.jpg",
+    "timestamp": "2025-10-22T20:30:00Z"
+  },
+  "14": {
+    "titulo": "Baja en precios de materias primas",
+    "descripcion": "Menores precios de commodities alivian presiones de costos.",
+    "monedas_afectadas": ["ZAR", "KRW", "CNY"],
+    "calificacion_impacto": ["7/10", "4/10", "5/10"],
+    "imageUrl": "/placeholder.jpg",
+    "timestamp": "2025-10-22T14:30:00Z"
+  },
+  "15": {
+    "titulo": "Acuerdo comercial regional avanza",
+    "descripcion": "El progreso en acuerdos regionales reduce barreras comerciales.",
+    "monedas_afectadas": ["USD", "INR", "BRL"],
+    "calificacion_impacto": ["6/10", "4/10", "8/10"],
+    "imageUrl": "/placeholder-user.jpg",
+    "timestamp": "2025-10-22T08:30:00Z"
+  },
+  "16": {
+    "titulo": "Banco central anuncia intervención cambiaria",
+    "descripcion": "La autoridad monetaria anuncia medidas para estabilizar el tipo de cambio.",
+    "monedas_afectadas": ["KRW", "JPY", "TRY"],
+    "calificacion_impacto": ["8/10", "7/10", "6/10"],
+    "imageUrl": "/squirrel-eating-nut.jpg",
+    "timestamp": "2025-10-22T02:30:00Z"
+  },
+  "17": {
+    "titulo": "Aumento en remesas fortalece divisas locales",
+    "descripcion": "El aumento de remesas apoya la demanda de divisas locales.",
+    "monedas_afectadas": ["BRL", "CHF"],
+    "calificacion_impacto": ["6/10", "4/10"],
+    "imageUrl": "/smartphone-with-colorful-bokeh-lights.jpg",
+    "timestamp": "2025-10-21T20:30:00Z"
+  },
+  "18": {
+    "titulo": "Deterioro en balanza comercial",
+    "descripcion": "El saldo comercial se deteriora por mayores importaciones.",
+    "monedas_afectadas": ["INR", "EUR", "GBP"],
+    "calificacion_impacto": ["7/10", "8/10", "6/10"],
+    "imageUrl": "/colorful-surfboards-on-beach.jpg",
+    "timestamp": "2025-10-21T14:30:00Z"
+  },
+  "19": {
+    "titulo": "Caída en exportaciones tecnológicas",
+    "descripcion": "Las exportaciones tecnológicas disminuyen por menor demanda externa.",
+    "monedas_afectadas": ["MXN", "CAD"],
+    "calificacion_impacto": ["4/10", "8/10"],
+    "imageUrl": "/placeholder.jpg",
+    "timestamp": "2025-10-21T08:30:00Z"
+  },
+  "20": {
+    "titulo": "Estímulo fiscal expansivo",
+    "descripcion": "Paquetes fiscales impulsan la demanda interna.",
+    "monedas_afectadas": ["EUR", "ZAR"],
+    "calificacion_impacto": ["4/10", "9/10"],
+    "imageUrl": "/placeholder-user.jpg",
+    "timestamp": "2025-10-21T02:30:00Z"
+  },
+  "21": {
+    "titulo": "Mercados anticipan subidas de tasas",
+    "descripcion": "El mercado descuenta próximas alzas de referencia.",
+    "monedas_afectadas": ["CNY", "TRY", "AUD"],
+    "calificacion_impacto": ["6/10", "6/10", "7/10"],
+    "imageUrl": "/squirrel-eating-nut.jpg",
+    "timestamp": "2025-10-20T20:30:00Z"
+  },
+  "22": {
+    "titulo": "Confianza del consumidor retrocede",
+    "descripcion": "La confianza del consumidor se debilita por incertidumbre.",
+    "monedas_afectadas": ["BRL", "GBP"],
+    "calificacion_impacto": ["7/10", "9/10"],
+    "imageUrl": "/smartphone-with-colorful-bokeh-lights.jpg",
+    "timestamp": "2025-10-20T14:30:00Z"
+  },
+  "23": {
+    "titulo": "Estabilidad en inflación subyacente",
+    "descripcion": "La inflación subyacente se mantiene estable.",
+    "monedas_afectadas": ["AUD", "TRY", "JPY"],
+    "calificacion_impacto": ["4/10", "6/10", "8/10"],
+    "imageUrl": "/colorful-surfboards-on-beach.jpg",
+    "timestamp": "2025-10-20T08:30:00Z"
+  },
+  "24": {
+    "titulo": "Volatilidad por resultados bancarios",
+    "descripcion": "Resultados mixtos en bancos elevan la volatilidad.",
+    "monedas_afectadas": ["KRW", "TRY", "AUD"],
+    "calificacion_impacto": ["8/10", "6/10", "9/10"],
+    "imageUrl": "/placeholder.jpg",
+    "timestamp": "2025-10-20T02:30:00Z"
+  },
+  "25": {
+    "titulo": "Nuevas regulaciones en criptoactivos",
+    "descripcion": "Nuevas reglas impactan la adopción de activos digitales.",
+    "monedas_afectadas": ["EUR", "JPY", "TRY"],
+    "calificacion_impacto": ["8/10", "9/10", "6/10"],
+    "imageUrl": "/placeholder-user.jpg",
+    "timestamp": "2025-10-19T20:30:00Z"
+  },
+  "26": {
+    "titulo": "Optimismo por turismo internacional",
+    "descripcion": "La recuperación del turismo apoya ingresos externos.",
+    "monedas_afectadas": ["ZAR", "EUR", "KRW"],
+    "calificacion_impacto": ["4/10", "6/10", "7/10"],
+    "imageUrl": "/squirrel-eating-nut.jpg",
+    "timestamp": "2025-10-19T14:30:00Z"
+  },
+  "27": {
+    "titulo": "Tensiones geopolíticas en Oriente Medio",
+    "descripcion": "Riesgos geopolíticos elevan la prima por riesgo.",
+    "monedas_afectadas": ["EUR", "KRW", "JPY"],
+    "calificacion_impacto": ["8/10", "9/10", "7/10"],
+    "imageUrl": "/smartphone-with-colorful-bokeh-lights.jpg",
+    "timestamp": "2025-10-19T08:30:00Z"
+  },
+  "28": {
+    "titulo": "Debilidad en el sector inmobiliario",
+    "descripcion": "Debilidad inmobiliaria pesa sobre la actividad.",
+    "monedas_afectadas": ["USD", "CNY", "KRW"],
+    "calificacion_impacto": ["9/10", "6/10", "4/10"],
+    "imageUrl": "/colorful-surfboards-on-beach.jpg",
+    "timestamp": "2025-10-19T02:30:00Z"
+  },
+  "29": {
+    "titulo": "Revisión al alza del PIB",
+    "descripcion": "La actividad económica se revisa al alza.",
+    "monedas_afectadas": ["EUR", "ZAR"],
+    "calificacion_impacto": ["8/10", "9/10"],
+    "imageUrl": "/placeholder.jpg",
+    "timestamp": "2025-10-18T20:30:00Z"
+  },
+  "30": {
+    "titulo": "Huelgas afectan producción industrial",
+    "descripcion": "Interrupciones laborales afectan la producción.",
+    "monedas_afectadas": ["AUD", "GBP", "ZAR"],
+    "calificacion_impacto": ["8/10", "6/10", "6/10"],
+    "imageUrl": "/placeholder-user.jpg",
+    "timestamp": "2025-10-18T14:30:00Z"
+  }
+}
