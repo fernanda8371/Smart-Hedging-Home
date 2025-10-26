@@ -16,6 +16,8 @@ type AIItem = {
   newsId: string
   newsTitle: string
   impactPairs: { pair: string; direction: "up" | "down"; score: string }[]
+  imageUrl?: string
+  timestamp?: string
 }
 
 export default function HomePage() {
@@ -148,7 +150,15 @@ Generated based on ${news.length} recent news items and your financial profile.`
       const data = await res.json()
       if (!res.ok || !data?.success) throw new Error(data?.error || "Analyze failed")
 
-      setAiItems(data.items as AIItem[])
+      const metaPicked = (data.meta?.picked ?? []) as { id: string; imageUrl?: string; timestamp?: string }[]
+
+      const merged: AIItem[] = (data.items as AIItem[]).map((it, idx) => ({
+      ...it,
+      imageUrl: metaPicked[idx]?.imageUrl,
+      timestamp: metaPicked[idx]?.timestamp,
+    }))
+
+      setAiItems(merged)
       setAiSelectedIndex(0) // seleccionar la primera card
     } catch (e) {
       console.error(e)
@@ -221,34 +231,74 @@ Generated based on ${news.length} recent news items and your financial profile.`
 
                 {/* AI Flashcards (análisis generado por /api/news/analyze) */}
                 {aiItems.length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">AI Analysis</div>
-                    {aiItems.map((it, idx) => (
-                      <div
-                        key={it.newsId}
-                        className={`border rounded-lg bg-white p-3 cursor-pointer transition-colors ${
-                          aiSelectedIndex === idx ? "ring-2 ring-blue-500" : "hover:bg-gray-50"
-                        }`}
-                        onClick={() => setAiSelectedIndex(idx)}
-                        title="Select to drive the Metrics panel"
-                        aria-label={`AI card ${idx + 1}`}
-                      >
-                        <div className="font-semibold text-sm">{it.newsTitle}</div>
-                        <ul className="mt-2 text-xs text-gray-600 space-y-1">
-                          {it.impactPairs.map((p, i) => (
-                            <li key={i}>
-                              {p.pair}:{" "}
-                              <span className={p.direction === "up" ? "text-green-600" : "text-red-600"}>
-                                {p.direction}
-                              </span>{" "}
-                              (score {p.score})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                    <div className="mt-4 space-y-3">
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">AI Analysis</div>
+                      {aiItems.map((it, idx) => (
+                        <div
+                          key={it.newsId}
+                          className={`border rounded-lg bg-white p-3 cursor-pointer transition-colors ${
+                            aiSelectedIndex === idx ? "ring-2 ring-blue-500" : "hover:bg-gray-50"
+                          }`}
+                          onClick={() => setAiSelectedIndex(idx)}
+                          title="Select to drive the Metrics panel"
+                          aria-label={`AI card ${idx + 1}`}
+                        >
+                          {/* Cabecera con imagen opcional */}
+                          {it.imageUrl && (
+                            <div className="-mx-3 -mt-3 mb-2">
+                              <img
+                                src={it.imageUrl}
+                                alt=""
+                                className="w-full h-24 object-cover rounded-t-lg"
+                              />
+                            </div>
+                          )}
+
+                          {/* Título y fecha opcional */}
+                          <div className="font-semibold text-sm">{it.newsTitle}</div>
+                          {it.timestamp && (
+                            <div className="text-[10px] text-gray-400 mt-1">
+                              {new Date(it.timestamp).toLocaleString()}
+                            </div>
+                          )}
+
+                          {/* Lista de impactos */}
+                          <ul className="mt-2 text-xs text-gray-600 space-y-1">
+                            {it.impactPairs.map((p, i) => (
+                              <li key={i}>
+                                {p.pair}:{" "}
+                                <span className={p.direction === "up" ? "text-green-600" : "text-red-600"}>
+                                  {p.direction}
+                                </span>{" "}
+                                (score {p.score})
+                              </li>
+                            ))}
+                          </ul>
+
+                          {/* Botón azul: Test Scenario */}
+                          <Button
+                            size="sm"
+                            className="mt-3 w-full"
+                            onClick={(e) => {
+                              e.stopPropagation() // evita que seleccione la card al clickear el botón
+                              const scenarioData = {
+                                title: it.newsTitle,
+                                source: "ai-analysis",
+                                timestamp: it.timestamp ?? null,
+                                imageUrl: it.imageUrl ?? null,
+                                impactPairs: it.impactPairs,
+                                primaryCurrency: userProfile?.currency || "MXN",
+                                userCurrencies: userProfile?.operatingCurrencies || [],
+                              }
+                              handleMakeScenario(scenarioData)
+                            }}
+                          >
+                            Test Scenario
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </>
             )}
 
