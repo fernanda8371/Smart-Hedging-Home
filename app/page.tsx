@@ -31,26 +31,39 @@ export default function HomePage() {
     return null
   }
 
-  // Generate AI impact scores for each news item
+  // Generate AI impact scores for each news item based on user's currencies
   const getImpactScores = (newsIndex: number) => {
-    const baseScores = [
-      [
+    if (!userProfile?.operatingCurrencies || !userProfile?.currency) {
+      // Fallback to default if no user profile
+      return [
         { pair: "USD/MXN", direction: "up" as const, score: "5/10" },
         { pair: "EUR/MXN", direction: "down" as const, score: "8/10" },
-        { pair: "GBP/MXN", direction: "down" as const, score: "10/10" },
-      ],
-      [
-        { pair: "USD/MXN", direction: "down" as const, score: "8/10" },
-        { pair: "EUR/MXN", direction: "up" as const, score: "6/10" },
-        { pair: "JPY/MXN", direction: "down" as const, score: "7/10" },
-      ],
-      [
-        { pair: "USD/MXN", direction: "up" as const, score: "10/10" },
-        { pair: "CAD/MXN", direction: "down" as const, score: "5/10" },
-        { pair: "EUR/MXN", direction: "up" as const, score: "9/10" },
       ]
-    ]
-    return baseScores[newsIndex % baseScores.length]
+    }
+
+    const primaryCurrency = userProfile.currency
+    const operatingCurrencies = userProfile.operatingCurrencies
+    
+    // Generate currency pairs (excluding primary currency from pairing with itself)
+    const currencyPairs = operatingCurrencies
+      .filter(currency => currency !== primaryCurrency)
+      .map(currency => `${currency}/${primaryCurrency}`)
+
+    // Generate impact scores for each pair based on news index
+    const directions = ["up", "down"] as const
+    const scores = ["5/10", "6/10", "7/10", "8/10", "9/10", "10/10"]
+    
+    return currencyPairs.map((pair, pairIndex) => {
+      // Use news index and pair index to generate consistent but varied scores
+      const directionIndex = (newsIndex + pairIndex) % 2
+      const scoreIndex = (newsIndex * 2 + pairIndex) % scores.length
+      
+      return {
+        pair,
+        direction: directions[directionIndex],
+        score: scores[scoreIndex]
+      }
+    })
   }
 
   const handleCurrencyChange = (pair: string) => {
@@ -200,6 +213,8 @@ Generated based on ${news.length} recent news items and your financial profile.`
                   key={selectedNewsItem.id}
                   impactPairs={getImpactScores(selectedNewsIndex)}
                   onCurrencyChange={handleCurrencyChange}
+                  userCurrencies={userProfile?.operatingCurrencies || ['USD']}
+                  primaryCurrency={userProfile?.currency || 'MXN'}
                 />
               )
             )}
