@@ -4,85 +4,74 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from "node:fs/promises";
+import path from "node:path";
 
-/** ---------- 1) Dataset local (puedes importarlo desde /lib si quieres) ---------- */
-const noticias: Record<string | number, {
-  titulo: string;
-  descripcion: string;
-  monedas_afectadas: string[];
-  calificacion_impacto: string[];
-}> = {
-  1: {
-    titulo: "Mercados financieros globales en alza",
-    descripcion:
-      "Los mercados financieros globales han experimentado un aumento significativo debido a las expectativas de recuperación económica post-pandemia.",
-    monedas_afectadas: ["USD", "EUR", "JPY"],
-    calificacion_impacto: ["5/10", "6/10", "4/10"],
-  },
-  2: {
-    titulo: "Aumento de la inflación en EE.UU.",
-    descripcion:
-      "La inflación en EE.UU. ha alcanzado un nuevo máximo en los últimos 12 meses, afectando el poder adquisitivo de los consumidores.",
-    monedas_afectadas: ["USD"],
-    calificacion_impacto: ["7/10"],
-  },
-  3: {
-    titulo: "Tensiones comerciales entre China y EE.UU.",
-    descripcion:
-      "Las tensiones comerciales entre China y EE.UU. continúan afectando los mercados financieros, con posibles repercusiones en las cadenas de suministro globales.",
-    monedas_afectadas: ["CNY", "USD"],
-    calificacion_impacto: ["6/10", "5/10"],
-  },
-  4: {
-    titulo: "Innovaciones tecnológicas en fintech",
-    descripcion:
-      "El sector fintech está experimentando un auge en innovaciones tecnológicas que están transformando los servicios financieros.",
-    monedas_afectadas: ["USD", "EUR"],
-    calificacion_impacto: ["4/10", "4/10"],
-  },
-  5: {
-    titulo: "Políticas monetarias de los bancos centrales",
-    descripcion:
-      "Los bancos centrales están ajustando sus políticas monetarias para abordar la inflación y estimular el crecimiento económico.",
-    monedas_afectadas: ["USD", "EUR", "GBP"],
-    calificacion_impacto: ["6/10", "5/10", "4/10"],
-  },
-};
+/** ---------- Tipos/Esquemas ---------- */
+const NoticiaSchema = z.object({
+  titulo: z.string(),
+  descripcion: z.string(),
+  monedas_afectadas: z.array(z.string().min(3)),
+  calificacion_impacto: z.array(z.string().regex(/^\d+\/10$/)).optional().default([]),
+  imageUrl: z.string().optional(),
+  timestamp: z.string().optional()
+});
+type Noticia = z.infer<typeof NoticiaSchema>;
 
-/** ---------- 2) Body opcional (filtros) ---------- */
+const NoticiasFileSchema = z.record(z.string(), NoticiaSchema);
+
 const BodySchema = z.object({
   currencies: z.array(z.string().min(3)).optional(),
   mode: z.enum(["any", "all"]).optional().default("any"),
   limit: z.number().int().min(1).max(10).optional().default(5),
+  model: z.enum(["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"]).optional().default("gemini-2.5-flash")
 });
 
-/** ---------- 3) Pick 5 noticias (shuffle + slice) ---------- */
-function pickNoticias(params: { currencies?: string[]; limit: number; mode: "any" | "all" }) {
-  const all = Object.entries(noticias);
-  let filtered = all;
+type PickParams = { currencies?: string[]; limit: number; mode: "any" | "all" };
+
+/** ---------- Carga + cache de noticias.json ---------- */
+const NEWS_PATH = path.join(process.cwd(),"noticias.json");
+
+// Cache simple en memoria para evitar leer disco en cada request
+let _cache: { map: Record<string, Noticia>; entries: [string, Noticia][] } | null = null;
+
+async function loadNoticias(): Promise<{ map: Record<string, Noticia>; entries: [string, Noticia][] }> {
+  if (_cache) return _cache;
+  const raw = await fs.readFile(NEWS_PATH, "utf-8");
+  const json = JSON.parse(raw);
+  const parsed = NoticiasFileSchema.parse(json); // valida estructura
+  const entries = Object.entries(parsed);
+  _cache = { map: parsed, entries };
+  return _cache;
+}
+
+/** ---------- Utilidad: barajar y seleccionar ---------- */
+function pickNoticias(entries: [string, Noticia][], params: PickParams) {
+  let filtered = entries;
 
   if (params.currencies?.length) {
     const wanted = new Set(params.currencies.map(c => c.toUpperCase()));
-    filtered = all.filter(([_, n]) => {
+    filtered = entries.filter(([_, n]) => {
       const have = new Set(n.monedas_afectadas.map(m => m.toUpperCase()));
       const overlap = [...wanted].filter(m => have.has(m));
       return params.mode === "all" ? overlap.length === wanted.size : overlap.length > 0;
     });
   }
 
-  // Fisher–Yates shuffle
-  for (let i = filtered.length - 1; i > 0; i--) {
+  // Fisher–Yates
+  const arr = filtered.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 
-  return filtered.slice(0, params.limit).map(([id, n]) => ({ id: String(id), ...n }));
+  return arr.slice(0, params.limit).map(([id, n]) => ({ id, ...n }));
 }
 
-/** ---------- 4) Llamada a Gemini para obtener JSON del dashboard ---------- */
+/** ---------- Llamada a Gemini ---------- */
 async function askGeminiForDashboard(
-  selected: ReturnType<typeof pickNoticias>,
-  model: string = "gemini-2.5-flash"
+  selected: Array<{ id: string } & Noticia>,
+  model: string
 ) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("Falta GEMINI_API_KEY");
@@ -96,10 +85,10 @@ Devuelve EXCLUSIVAMENTE un JSON con este schema:
 {
   "items": [
     {
-      "newsId":"string",
-      "newsTitle":"string",
-      "impactPairs":[
-        {"pair":"string","direction":"up|down","score":"X/10"}
+      "newsId": "string",
+      "newsTitle": "string",
+      "impactPairs": [
+        { "pair": "string", "direction": "up|down", "score": "X/10" }
       ]
     }
   ]
@@ -109,8 +98,8 @@ Reglas:
 - "newsId" = id; "newsTitle" = titulo.
 - Por cada moneda en "monedas_afectadas", agrega una entrada en "impactPairs".
 - "pair": puedes usar solo el código ("USD") o un par ("USD/EUR") si aplica.
-- "direction": "up" si la noticia tendería a fortalecer la moneda, "down" si tendería a debilitarla.
-- "score": usa "calificacion_impacto" alineada si es posible; si faltan, estima un valor similar.
+- "direction": "up" si tendería a fortalecer la moneda, "down" si tendería a debilitarla.
+- "score": usa "calificacion_impacto" alineada si existe; si faltan, estima un valor similar.
 - No agregues explicaciones ni backticks; SOLO el JSON.
 
 Noticias:
@@ -120,53 +109,56 @@ ${JSON.stringify(selected, null, 2)}`;
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
 
-  // El modelo suele devolver texto plano con el JSON
   let raw = result.response.text() ?? "";
   if (!raw.trim()) throw new Error("Gemini devolvió respuesta vacía");
-
-  // Quita ```json ... ``` si viene formateado
   raw = raw.replace(/```json|```/g, "").trim();
 
-  // Parseo simple (puedes añadir Zod si quieres validar fuerte)
+  // (Opcional) podrías validar la salida con Zod
   const data = JSON.parse(raw);
   return data; // { items: [...] }
 }
 
-/** ---------- 5) Fallback simple si Gemini falla ---------- */
-function fallbackDashboard(selected: ReturnType<typeof pickNoticias>) {
+/** ---------- Fallback si Gemini falla ---------- */
+function fallbackDashboard(selected: Array<{ id: string } & Noticia>) {
   return {
     items: selected.map(n => ({
       newsId: n.id,
       newsTitle: n.titulo,
       impactPairs: n.monedas_afectadas.map((m, idx) => ({
         pair: m,
-        direction: "up" as const, // heurística simple
+        direction: "up" as const,
         score: n.calificacion_impacto[idx] ?? "5/10",
       })),
     })),
   };
 }
 
-/** ---------- 6) Handler POST ---------- */
+/** ---------- POST handler ---------- */
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { currencies, limit, mode } = BodySchema.parse(body);
+    const { currencies, limit, mode, model } = BodySchema.parse(body);
 
-    // (a) elegir 5 noticias (o las que pidas en limit)
-    const selected = pickNoticias({ currencies, limit, mode });
+    const { entries } = await loadNoticias();
 
-    // (b) invocar a Gemini para convertir → JSON de dashboard
+    const selected = pickNoticias(entries, { currencies, limit, mode });
+
     let dashboard;
     try {
-      dashboard = await askGeminiForDashboard(selected);
+      dashboard = await askGeminiForDashboard(selected, model);
     } catch (e) {
       console.error("Gemini error:", e);
       dashboard = fallbackDashboard(selected);
     }
 
-    // (c) regresar JSON listo para el front
-    return NextResponse.json({ success: true, items: dashboard.items });
+    return NextResponse.json({
+      success: true,
+      items: dashboard.items,
+      // opcional: pasa metadata útil al front
+      meta: {
+        picked: selected.map(({ id, imageUrl, timestamp }) => ({ id, imageUrl, timestamp }))
+      }
+    });
   } catch (err) {
     console.error("analyze error:", err);
     return NextResponse.json({ success: false, error: "Analyze failed" }, { status: 500 });
