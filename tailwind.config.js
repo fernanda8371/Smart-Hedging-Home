@@ -49,6 +49,10 @@ module.exports = {
           900: '#c1121f',
           950: '#4c0519'
         },
+        brand: {
+          text: '#c1121f',
+          button: '#780000'
+        },
         link: {
           DEFAULT: '#003049',
           hover: '#004d73'

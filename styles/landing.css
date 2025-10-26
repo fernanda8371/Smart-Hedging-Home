@@ -1,0 +1,116 @@
+/* SmartHedging Landing Page Styles */
+
+/* Brand Colors */
+:root {
+  --brand-text: #c1121f;
+  --brand-button: #780000;
+  --brand-button-hover: #5a0000;
+  --brand-accent: #c1121f;
+}
+
+/* Brand Text Color */
+.text-brand {
+  color: var(--brand-text);
+}
+
+.text-brand-hover:hover {
+  color: var(--brand-text);
+}
+
+/* Brand Button Styles */
+.btn-brand {
+  background-color: var(--brand-button);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-brand:hover {
+  background-color: var(--brand-button-hover);
+}
+
+/* Brand Background */
+.bg-brand {
+  background-color: var(--brand-text);
+}
+
+.bg-brand-button {
+  background-color: var(--brand-button);
+}
+
+.bg-brand-light {
+  background-color: rgba(193, 18, 31, 0.1);
+}
+
+/* Border Colors */
+.border-brand {
+  border-color: var(--brand-text);
+}
+
+/* Icon Colors */
+.icon-brand {
+  color: var(--brand-text);
+}
+
+/* Gradient Backgrounds */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, rgba(193, 18, 31, 0.05) 0%, transparent 50%, rgba(193, 18, 31, 0.1) 100%);
+}
+
+.bg-hero-gradient {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%);
+}
+
+.bg-features-gradient {
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+/* Feature Card Hover Effects */
+.feature-card-overlay {
+  background: linear-gradient(90deg, rgba(193, 18, 31, 0.05) 0%, transparent 100%);
+}
+
+/* CTA Section Background */
+.bg-cta {
+  background-color: var(--brand-text);
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+}
+
+/* Animation Classes */
+.slide-up {
+  animation: slideUp 0.8s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Custom Shadows */
+.shadow-brand {
+  box-shadow: 0 10px 25px rgba(193, 18, 31, 0.15);
+}
+
+.shadow-brand-lg {
+  box-shadow: 0 20px 40px rgba(193, 18, 31, 0.2);
+}
