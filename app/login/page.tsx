@@ -74,7 +74,7 @@ export default function LoginPage() {
 
   if (isCreatingAccount) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <Header />
         
         <div className="flex items-center justify-center px-6 py-12">
@@ -233,7 +233,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Header />
       
       <div className="flex items-center justify-center px-6 py-12">
@@ -247,7 +247,7 @@ export default function LoginPage() {
           
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <Button onClick={handleLogin} className="w-full" size="lg">
+              <Button onClick={handleLogin} className="w-full bg-primary hover:bg-primary/90" size="lg">
                 Demo Login
               </Button>
               

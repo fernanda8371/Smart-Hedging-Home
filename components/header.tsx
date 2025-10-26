@@ -27,13 +27,13 @@ export function Header() {
         </Link>
 
         <nav className="flex items-center gap-8">
-          <Link href="/saved" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+          <Link href="/saved" className="text-link hover:text-link-hover font-medium transition-colors">
             Saved
           </Link>
-          <Link href="/recent" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
-            Recent
+          <Link href="/scenario" className="text-link hover:text-link-hover font-medium transition-colors">
+            Scenario Builder
           </Link>
-          <Link href="/settings" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+          <Link href="/settings" className="text-link hover:text-link-hover font-medium transition-colors">
             Settings
           </Link>
         </nav>
@@ -45,9 +45,9 @@ export function Header() {
                 <p className="text-sm font-medium text-gray-900">{userProfile.companyName}</p>
                 <p className="text-xs text-gray-500">{userProfile.currency} • {userProfile.riskTolerance} risk</p>
               </div>
-              <Avatar className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all">
+              <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
                 <AvatarImage src="/placeholder-user.png" />
-                <AvatarFallback className="bg-blue-100 text-blue-700">
+                <AvatarFallback className="bg-primary/10 text-primary">
                   {userProfile.companyName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>

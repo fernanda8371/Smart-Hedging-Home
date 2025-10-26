@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, Calculator, TrendingUp, TrendingDown, Info } from "lucide-react"
+import { ArrowLeft, Calculator, TrendingUp, TrendingDown, Info, Save, BookOpen } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,6 +41,9 @@ export default function ScenarioPage() {
   })
 
   const [selectedStrategy, setSelectedStrategy] = useState<string>("")
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [scenarioName, setScenarioName] = useState("")
+  const [scenarioDescription, setScenarioDescription] = useState("")
 
   // Load data from context when component mounts
   useEffect(() => {
@@ -58,6 +61,60 @@ export default function ScenarioPage() {
       }))
     }
   }, [scenarioData])
+
+  // Load saved scenario if available
+  useEffect(() => {
+    const loadedScenario = sessionStorage.getItem('loadedScenario')
+    if (loadedScenario) {
+      const scenario = JSON.parse(loadedScenario)
+      setInputs({
+        underlyingPrice: scenario.spotPrice,
+        volatility: scenario.volatility * 100, // Convert back from decimal
+        riskFreeRate: scenario.riskFreeRate * 100, // Convert back from decimal
+        strike: scenario.strikePrice,
+        underlyings: 1,
+        period: scenario.timeToExpiration * 12 // Convert back from years
+      })
+      setSelectedStrategy(scenario.strategy)
+      sessionStorage.removeItem('loadedScenario') // Clean up
+    }
+  }, [])
+
+  const handleSaveScenario = () => {
+    if (!scenarioName.trim() || !selectedStrategy) {
+      alert('Please enter a scenario name and select a strategy')
+      return
+    }
+
+    const savedScenario = {
+      id: Date.now().toString(),
+      name: scenarioName.trim(),
+      description: scenarioDescription.trim(),
+      spotPrice: inputs.underlyingPrice,
+      strikePrice: inputs.strike,
+      volatility: inputs.volatility / 100, // Store as decimal
+      riskFreeRate: inputs.riskFreeRate / 100, // Store as decimal
+      timeToExpiration: inputs.period / 12, // Store as years
+      strategy: selectedStrategy,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    // Load existing saved scenarios
+    const existingSaved = localStorage.getItem('savedScenarios')
+    const savedScenarios = existingSaved ? JSON.parse(existingSaved) : []
+    
+    // Add new scenario
+    savedScenarios.push(savedScenario)
+    localStorage.setItem('savedScenarios', JSON.stringify(savedScenarios))
+
+    // Reset form
+    setScenarioName("")
+    setScenarioDescription("")
+    setSaveDialogOpen(false)
+    
+    alert('Scenario saved successfully!')
+  }
 
   // Mock Black-Scholes calculation (simplified for demo)
   const calculateOptions = (): OptionOutput => {
@@ -154,7 +211,7 @@ export default function ScenarioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center gap-4">
@@ -268,6 +325,72 @@ export default function ScenarioPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Save Scenario Section */}
+              <div className="pt-4 border-t space-y-3">
+                <h4 className="font-medium text-slate-900">Save Configuration</h4>
+                {!saveDialogOpen ? (
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => setSaveDialogOpen(true)}
+                      className="flex-1 bg-primary hover:bg-primary/90"
+                      size="sm"
+                      disabled={!selectedStrategy}
+                    >
+                      <Save className="w-4 h-4 mr-1" />
+                      Save Scenario
+                    </Button>
+                    <Link href="/saved">
+                      <Button variant="outline" size="sm">
+                        <BookOpen className="w-4 h-4 mr-1" />
+                        View Saved
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="scenarioName" className="text-sm">Scenario Name *</Label>
+                      <Input
+                        id="scenarioName"
+                        value={scenarioName}
+                        onChange={(e) => setScenarioName(e.target.value)}
+                        placeholder="Enter scenario name"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="scenarioDescription" className="text-sm">Description (optional)</Label>
+                      <Input
+                        id="scenarioDescription"
+                        value={scenarioDescription}
+                        onChange={(e) => setScenarioDescription(e.target.value)}
+                        placeholder="Brief description"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleSaveScenario}
+                        className="flex-1 bg-primary hover:bg-primary/90"
+                        size="sm"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        onClick={() => setSaveDialogOpen(false)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {!selectedStrategy && (
+                  <p className="text-xs text-amber-600">Select a strategy to enable saving</p>
+                )}
               </div>
             </CardContent>
           </Card>

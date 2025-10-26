@@ -1,16 +1,31 @@
 "use client"
 
+import { useEffect } from "react"
 import { ChevronDown } from "lucide-react"
 import { useNews } from "@/hooks/use-news"
 import { AnalysisRow } from "@/components/analysis-row"
 import { useScenario } from "@/contexts/scenario-context"
 import { useRouter } from "next/navigation"
+import { useUser } from "@/contexts/user-context"
 import { Header } from "@/components/header"
 
 export default function HomePage() {
   const { news, loading } = useNews()
   const { setScenarioData } = useScenario()
+  const { isLoggedIn } = useUser()
   const router = useRouter()
+
+  // Redirect to landing if not logged in
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push('/landing')
+    }
+  }, [isLoggedIn, router])
+
+  // Show loading or empty state while checking auth
+  if (!isLoggedIn) {
+    return null
+  }
 
   // Generate AI impact scores for each news item
   const getImpactScores = (newsIndex: number) => {
