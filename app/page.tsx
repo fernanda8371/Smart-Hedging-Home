@@ -11,13 +11,27 @@ import { Button } from "@/components/ui/button"
 import { NewsCardColumn } from "@/components/dashboard/news-card-column"
 import { MetricsColumn } from "@/components/dashboard/metrics-column"
 
+/** ---- Tipo del item que devuelve /api/news/analyze ---- */
+type AIItem = {
+  newsId: string
+  newsTitle: string
+  impactPairs: { pair: string; direction: "up" | "down"; score: string }[]
+}
+
 export default function HomePage() {
   const { news, loading } = useNews()
   const { setScenarioData } = useScenario()
   const { isLoggedIn, userProfile } = useUser()
   const router = useRouter()
+
+  // Estado original
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [selectedNewsIndex, setSelectedNewsIndex] = useState(0)
+
+  // ---- Estado para análisis AI (endpoint Opción B) ----
+  const [aiItems, setAiItems] = useState<AIItem[]>([])
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiSelectedIndex, setAiSelectedIndex] = useState<number | null>(null)
 
   // Redirect to landing if not logged in
   useEffect(() => {
@@ -31,7 +45,7 @@ export default function HomePage() {
     return null
   }
 
-  // Generate AI impact scores for each news item based on user's currencies
+  // Generate AI impact scores for each news item based on user's currencies (fallback actual)
   const getImpactScores = (newsIndex: number) => {
     if (!userProfile?.operatingCurrencies || !userProfile?.currency) {
       // Fallback to default if no user profile
@@ -75,6 +89,7 @@ export default function HomePage() {
     router.push('/scenario')
   }
 
+  // ---- Botón "Create News Summary" (tu flujo existente) ----
   const generateNewsSummary = async () => {
     if (!userProfile?.operatingCurrencies?.length) {
       alert('Please configure your operating currencies in Settings first.')
@@ -107,8 +122,6 @@ export default function HomePage() {
 • Review option strategies for high volatility pairs
 
 Generated based on ${news.length} recent news items and your financial profile.`
-
-      // Show summary in alert (in production, this would be a proper modal)
       alert(summary)
       
     } catch (error) {
@@ -118,7 +131,41 @@ Generated based on ${news.length} recent news items and your financial profile.`
     }
   }
 
+  // ---- Botón "Load More Analysis": pega al endpoint Opción B y crea flashcards AI ----
+  const loadMoreAnalysis = async () => {
+    setAiLoading(true)
+    try {
+      const currencies = userProfile?.operatingCurrencies
+      const body = currencies?.length
+        ? { currencies, limit: 5, mode: "any" as const }
+        : { limit: 5, mode: "any" as const }
+
+      const res = await fetch("/api/mcp/news-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok || !data?.success) throw new Error(data?.error || "Analyze failed")
+
+      setAiItems(data.items as AIItem[])
+      setAiSelectedIndex(0) // seleccionar la primera card
+    } catch (e) {
+      console.error(e)
+      alert("Error loading analysis")
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  // News de la columna original
   const selectedNewsItem = news[selectedNewsIndex]
+
+  // Impactos que alimentan la métrica grande: si hay AI card seleccionada, usamos esa; si no, el fallback actual
+  const impactForMetrics =
+    aiSelectedIndex !== null && aiItems[aiSelectedIndex]
+      ? aiItems[aiSelectedIndex].impactPairs
+      : getImpactScores(selectedNewsIndex)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -163,21 +210,57 @@ Generated based on ${news.length} recent news items and your financial profile.`
                 ))}
               </div>
             ) : (
-              <NewsCardColumn
-                news={news.slice(0, 3)}
-                onNewsSelect={setSelectedNewsIndex}
-                selectedIndex={selectedNewsIndex}
-                getImpactScores={getImpactScores}
-                onMakeScenario={handleMakeScenario}
-              />
+              <>
+                <NewsCardColumn
+                  news={news.slice(0, 3)}
+                  onNewsSelect={setSelectedNewsIndex}
+                  selectedIndex={selectedNewsIndex}
+                  getImpactScores={getImpactScores}
+                  onMakeScenario={handleMakeScenario}
+                />
+
+                {/* AI Flashcards (análisis generado por /api/news/analyze) */}
+                {aiItems.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider">AI Analysis</div>
+                    {aiItems.map((it, idx) => (
+                      <div
+                        key={it.newsId}
+                        className={`border rounded-lg bg-white p-3 cursor-pointer transition-colors ${
+                          aiSelectedIndex === idx ? "ring-2 ring-blue-500" : "hover:bg-gray-50"
+                        }`}
+                        onClick={() => setAiSelectedIndex(idx)}
+                        title="Select to drive the Metrics panel"
+                        aria-label={`AI card ${idx + 1}`}
+                      >
+                        <div className="font-semibold text-sm">{it.newsTitle}</div>
+                        <ul className="mt-2 text-xs text-gray-600 space-y-1">
+                          {it.impactPairs.map((p, i) => (
+                            <li key={i}>
+                              {p.pair}:{" "}
+                              <span className={p.direction === "up" ? "text-green-600" : "text-red-600"}>
+                                {p.direction}
+                              </span>{" "}
+                              (score {p.score})
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
+
             <div className="mt-6 text-center">
               <button 
+                onClick={loadMoreAnalysis}
+                disabled={aiLoading}
                 className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 mx-auto text-sm"
                 aria-label="Load more analysis"
                 title="Load more analysis"
               >
-                <span className="text-gray-600">Load More Analysis</span>
+                <span className="text-gray-600">{aiLoading ? "Loading..." : "Load More Analysis"}</span>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
             </div>
@@ -210,8 +293,8 @@ Generated based on ${news.length} recent news items and your financial profile.`
             ) : (
               selectedNewsItem && (
                 <MetricsColumn
-                  key={selectedNewsItem.id}
-                  impactPairs={getImpactScores(selectedNewsIndex)}
+                  key={selectedNewsItem.id ?? `ai-${aiSelectedIndex ?? 'none'}`}
+                  impactPairs={impactForMetrics}
                   onCurrencyChange={handleCurrencyChange}
                   userCurrencies={userProfile?.operatingCurrencies || ['USD']}
                   primaryCurrency={userProfile?.currency || 'MXN'}
