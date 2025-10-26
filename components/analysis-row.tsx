@@ -2,15 +2,15 @@
 
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChevronDown, ChevronRight, TrendingUp, TrendingDown, ExternalLink, Bookmark } from "lucide-react"
+import { TrendingUp, TrendingDown } from "lucide-react"
 import { ImpactEventCard } from "@/components/impact-event-card"
 import { TimeFilter } from "@/components/ui/time-filter"
 import { InfoTooltip } from "@/components/ui/info-tooltip"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { format } from "date-fns"
-import Link from "next/link"
+
 
 interface CurrencyPair {
   pair: string
@@ -106,6 +106,7 @@ export function AnalysisRow({ newsItem, impactPairs, onCurrencyChange, onMakeSce
           url={newsItem.url}
           publishedAt={newsItem.publishedAt}
           source={newsItem.source.name}
+          onTestScenario={handleMakeScenario}
         />
       </div>
 
@@ -248,20 +249,6 @@ export function AnalysisRow({ newsItem, impactPairs, onCurrencyChange, onMakeSce
                     </div>
                   ))}
               </div>
-            </div>
-
-            {/* Make Scenario Button */}
-            <div className="pt-3 border-t border-gray-100">
-              <Link href="/scenario" onClick={handleMakeScenario}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-between text-gray-600 hover:text-gray-900 hover:bg-gray-50 h-8"
-                >
-                  <span className="text-xs">Make Scenario</span>
-                  <ChevronRight className="w-3 h-3" />
-                </Button>
-              </Link>
             </div>
           </CardContent>
         </Card>

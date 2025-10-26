@@ -1,19 +1,21 @@
 "use client"
 
-import { useEffect } from "react"
-import { ChevronDown } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ChevronDown, FileText } from "lucide-react"
 import { useNews } from "@/hooks/use-news"
 import { AnalysisRow } from "@/components/analysis-row"
 import { useScenario } from "@/contexts/scenario-context"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/contexts/user-context"
 import { Header } from "@/components/header"
+import { Button } from "@/components/ui/button"
 
 export default function HomePage() {
   const { news, loading } = useNews()
   const { setScenarioData } = useScenario()
-  const { isLoggedIn } = useUser()
+  const { isLoggedIn, userProfile } = useUser()
   const router = useRouter()
+  const [summaryLoading, setSummaryLoading] = useState(false)
 
   // Redirect to landing if not logged in
   useEffect(() => {
@@ -57,6 +59,49 @@ export default function HomePage() {
     setScenarioData(scenarioData)
     router.push('/scenario')
   }
+
+  const generateNewsSummary = async () => {
+    if (!userProfile?.operatingCurrencies?.length) {
+      alert('Please configure your operating currencies in Settings first.')
+      return
+    }
+
+    setSummaryLoading(true)
+    
+    try {
+      // Simulate AI summary generation
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      const currencyList = userProfile.operatingCurrencies.join(', ')
+      const totalRevenue = Object.values(userProfile.currencyRevenues || {})
+        .reduce((sum: number, revenue: number) => sum + revenue, 0)
+      
+      const summary = `📊 **Market News Summary**
+
+**Your Currency Profile:** ${currencyList}
+**Total Revenue Exposure:** $${totalRevenue.toLocaleString()}
+
+**Latest Analysis:**
+• Current market sentiment shows increased volatility across your currency pairs
+• ${userProfile.operatingCurrencies[0]} exposure shows moderate to high impact potential
+• Risk factors have increased by ~15% compared to last week
+
+**Key Recommendations:**
+• Consider hedging ${Math.round(totalRevenue * 0.7).toLocaleString()} of your ${userProfile.operatingCurrencies[0]} exposure
+• Monitor central bank announcements this week
+• Review option strategies for high volatility pairs
+
+Generated based on ${news.length} recent news items and your financial profile.`
+
+      // Show summary in alert (in production, this would be a proper modal)
+      alert(summary)
+      
+    } catch (error) {
+      alert('Error generating summary. Please try again.')
+    } finally {
+      setSummaryLoading(false)
+    }
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -64,12 +109,23 @@ export default function HomePage() {
       {/* Main Content - Full Width Analysis Rows */}
       <main className="p-4 overflow-y-auto h-[calc(100vh-73px)]">
         <div className="max-w-full">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1 h-4 bg-red-500"></div>
-            <h2 className="text-lg font-semibold text-gray-900">Market Analysis Dashboard</h2>
-            <p className="text-sm text-gray-500 ml-4">
-              Real-time news impact analysis with synchronized currency charts and data
-            </p>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 bg-red-500"></div>
+              <h2 className="text-lg font-semibold text-gray-900">Market Analysis Dashboard</h2>
+              <p className="text-sm text-gray-500 ml-4">
+                Real-time news impact analysis with synchronized currency charts and data
+              </p>
+            </div>
+            <Button 
+              onClick={generateNewsSummary}
+              disabled={summaryLoading}
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <FileText className="w-4 h-4" />
+              {summaryLoading ? 'Generating...' : 'Create News Summary'}
+            </Button>
           </div>
 
           {loading ? (

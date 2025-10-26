@@ -39,7 +39,12 @@ export default function SettingsPage() {
     }
     
     if (userProfile) {
-      setFormData(userProfile)
+      // Ensure currencyRevenues exists for backward compatibility
+      const migratedProfile = {
+        ...userProfile,
+        currencyRevenues: userProfile.currencyRevenues || {}
+      }
+      setFormData(migratedProfile)
     }
   }, [isLoggedIn, userProfile, router])
 
@@ -85,7 +90,33 @@ export default function SettingsPage() {
       ? formData.operatingCurrencies.filter(c => c !== currency)
       : [...formData.operatingCurrencies, currency]
     
-    setFormData(prev => prev ? { ...prev, operatingCurrencies: newCurrencies } : null)
+    // Initialize currency revenue if adding new currency
+    const updatedRevenues = { ...formData.currencyRevenues }
+    if (!formData.operatingCurrencies.includes(currency) && newCurrencies.includes(currency)) {
+      updatedRevenues[currency] = 0
+    }
+    // Remove currency revenue if removing currency
+    if (formData.operatingCurrencies.includes(currency) && !newCurrencies.includes(currency)) {
+      delete updatedRevenues[currency]
+    }
+    
+    setFormData(prev => prev ? { 
+      ...prev, 
+      operatingCurrencies: newCurrencies,
+      currencyRevenues: updatedRevenues
+    } : null)
+  }
+
+  const handleCurrencyRevenueChange = (currency: string, amount: number) => {
+    if (!formData) return
+    
+    setFormData(prev => prev ? {
+      ...prev,
+      currencyRevenues: {
+        ...prev.currencyRevenues,
+        [currency]: amount
+      }
+    } : null)
   }
 
   if (!formData) {
@@ -238,6 +269,36 @@ export default function SettingsPage() {
                 Selected: {formData.operatingCurrencies.join(', ')}
               </p>
             </div>
+
+            {/* Currency Revenue Breakdown */}
+            {formData.operatingCurrencies.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Label>Annual Revenue by Currency</Label>
+                  <InfoTooltip content="Specify your approximate annual revenue in each operating currency to help calculate exposure and risk." />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {formData.operatingCurrencies.map((currency) => (
+                    <div key={currency}>
+                      <Label htmlFor={`revenue-${currency}`} className="text-sm">
+                        Revenue in {currency}
+                      </Label>
+                      <Input
+                        id={`revenue-${currency}`}
+                        type="number"
+                        placeholder="0"
+                        value={formData.currencyRevenues[currency] || ''}
+                        onChange={(e) => handleCurrencyRevenueChange(currency, Number(e.target.value))}
+                        className="mt-1"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Enter annual revenue amounts for each selected currency to improve analysis accuracy.
+                </p>
+              </div>
+            )}
 
             <div>
               <div className="flex items-center gap-2 mb-2">

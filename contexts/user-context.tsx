@@ -11,6 +11,7 @@ export interface UserProfile {
   annualRevenue: number
   currency: string // Primary currency
   operatingCurrencies: string[] // All currencies they work with
+  currencyRevenues: { [currency: string]: number } // Annual revenue per currency
   
   // Risk Profile
   riskTolerance: 'low' | 'medium' | 'high'
@@ -41,6 +42,7 @@ const defaultProfile: UserProfile = {
   annualRevenue: 0,
   currency: 'MXN',
   operatingCurrencies: ['MXN', 'USD'],
+  currencyRevenues: { 'MXN': 0, 'USD': 0 },
   riskTolerance: 'medium',
   hedgingObjective: '',
   preferredTimeframe: '1M',
@@ -63,7 +65,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const savedLoginStatus = localStorage.getItem('isLoggedIn')
     
     if (savedProfile && savedLoginStatus === 'true') {
-      setUserProfileState(JSON.parse(savedProfile))
+      const profile = JSON.parse(savedProfile)
+      // Ensure backward compatibility for currencyRevenues
+      if (!profile.currencyRevenues) {
+        profile.currencyRevenues = {}
+        // Initialize with zeros for existing currencies
+        profile.operatingCurrencies?.forEach((currency: string) => {
+          profile.currencyRevenues[currency] = 0
+        })
+      }
+      setUserProfileState(profile)
       setIsLoggedIn(true)
     }
   }, [])

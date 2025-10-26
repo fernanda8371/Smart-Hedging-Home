@@ -207,7 +207,7 @@ export function CurrencyChartCard({
                 variant="ghost"
                 className="w-full justify-between text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               >
-                Make Scenario
+                Test Scenario
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
